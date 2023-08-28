@@ -51,6 +51,7 @@ void parse(char* buffer, int m, Table t)
     {
         for (int j = 0 ; j < t.cols; j++)
         {
+            char *temp = "";
             while(k < m && buffer[k] != '|' && buffer[k] != '\n')
             {
                 if(buffer[k] == ' ')
@@ -58,12 +59,15 @@ void parse(char* buffer, int m, Table t)
                     k++;
                     continue;
                 }
-                // const char *tmpchar = (buffer+k);
-                printf("%c", buffer[k]);
-                // strcat((t.table)[i][j].val, tmpchar);
+                char c = buffer[k];
+                char* new_temp = malloc(strlen(temp) + 1 + 1);
+                strcpy(new_temp, temp);
+                new_temp[strlen(temp)] = c;
+                new_temp[strlen(temp) + 1] = '\0';
+                temp = new_temp;
                 k++;
             }
-            printf("\n");
+            printf("%s\n", temp);
             k++;
         }
     }
