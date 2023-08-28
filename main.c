@@ -2,9 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+//Type represents different types of cell
+typedef enum {
+    NUMBER, POSITION, EXPRESSION
+}Type;
+
 //Cell represents indivisual cell in csv file
 typedef struct {
     char* val;
+    Type type;
 }Cell ;
 
 //Table represents the structure of csv file
@@ -15,7 +21,7 @@ typedef struct {
 }Table;
 
 
-void parse(char* buffer, int m, Table t)
+void parse(char* buffer, int m, Table *t)
 {
     int row = 0;
     int col = 0;
@@ -34,22 +40,22 @@ void parse(char* buffer, int m, Table t)
     }
 
     //incrementing since a single '|' will represent two columns
-    t.rows = ++row;
-    t.cols = ++col;
-    printf("The dimension of csv file is %dx%d\n", t.rows, t.cols);
+    t->rows = ++row;
+    t->cols = ++col;
+    printf("The dimension of csv file is %dx%d\n", t->rows, t->cols);
 
     Cell *p = NULL;
-    t.table = (Cell**)malloc(sizeof(p)*t.rows);
+    t->table = (Cell**)malloc(sizeof(p)*t->rows);
 
-    for (int i = 0 ; i < t.rows; i++)
+    for (int i = 0 ; i < t->rows; i++)
     {
-        t.table[i] = (Cell*)malloc(sizeof(Cell)*t.cols);
+        t->table[i] = (Cell*)malloc(sizeof(Cell)*t->cols);
     }
 
     int k = 0;
-    for (int i = 0 ; i < t.rows; i++)
+    for (int i = 0 ; i < t->rows; i++)
     {
-        for (int j = 0 ; j < t.cols; j++)
+        for (int j = 0 ; j < t->cols; j++)
         {
             char *temp = "";
             while(k < m && buffer[k] != '|' && buffer[k] != '\n')
@@ -67,17 +73,30 @@ void parse(char* buffer, int m, Table t)
                 temp = new_temp;
                 k++;
             }
-            (t.table[i][j]).val = temp;
+            (t->table[i][j]).val = temp;
             k++;
         }
     }
+}
 
-    printf("Your CSV file after parsing:\n");
-    for (int i = 0 ; i < t.rows; i++)
+void analyse(Table *t)
+{
+    for (int i = 0 ; i < t->rows; i++)
     {
-        for (int j = 0 ; j < t.cols; j++)
+        for (int j = 0 ; j < t->cols; j++)
         {
-            printf("%s\n", (t.table[i][j]).val);
+            if(t->table[i][j].val[0] == '=')
+            {
+                t->table[i][j].type = EXPRESSION;
+            }
+            else if (t->table[i][j].val[0] >= '0' && t->table[i][j].val[0] <= '9')
+            {
+                t->table[i][j].type = NUMBER;
+            }
+            else
+            {
+                t->table[i][j].type = POSITION;
+            }
         }
     }
 }
@@ -123,7 +142,26 @@ int main(int argc, char* argv[])
 
     //parse the csv file and store it in Table t
     Table t;
-    parse(buffer, m, t);
+    parse(buffer, m, &t);
+    printf("Your CSV file after parsing:\n");
+    for (int i = 0 ; i < t.rows; i++)
+    {
+        for (int j = 0 ; j < t.cols; j++)
+        {
+            printf("%s\n", (t.table[i][j]).val);
+        }
+    }
+
+    //assign each cell a type
+    analyse(&t);
+    for (int i = 0 ; i < t.rows; i++)
+    {
+        for (int j = 0 ; j < t.cols; j++)
+        {
+            printf("%d ", (t.table[i][j]).type);
+        }
+        printf("\n");
+    }
 
     return 0;
 }
