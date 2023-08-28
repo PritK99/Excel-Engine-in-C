@@ -101,6 +101,11 @@ void analyse(Table *t)
     }
 }
 
+void solve(Table *t)
+{
+
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2)
@@ -143,25 +148,12 @@ int main(int argc, char* argv[])
     //parse the csv file and store it in Table t
     Table t;
     parse(buffer, m, &t);
-    printf("Your CSV file after parsing:\n");
-    for (int i = 0 ; i < t.rows; i++)
-    {
-        for (int j = 0 ; j < t.cols; j++)
-        {
-            printf("%s\n", (t.table[i][j]).val);
-        }
-    }
 
     //assign each cell a type
     analyse(&t);
-    for (int i = 0 ; i < t.rows; i++)
-    {
-        for (int j = 0 ; j < t.cols; j++)
-        {
-            printf("%d ", (t.table[i][j]).type);
-        }
-        printf("\n");
-    }
+
+    //solve expression cells
+    solve(&t);
 
     return 0;
 }
