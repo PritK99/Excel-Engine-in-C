@@ -67,8 +67,17 @@ void parse(char* buffer, int m, Table t)
                 temp = new_temp;
                 k++;
             }
-            printf("%s\n", temp);
+            (t.table[i][j]).val = temp;
             k++;
+        }
+    }
+
+    printf("Your CSV file after parsing:\n");
+    for (int i = 0 ; i < t.rows; i++)
+    {
+        for (int j = 0 ; j < t.cols; j++)
+        {
+            printf("%s\n", (t.table[i][j]).val);
         }
     }
 }
