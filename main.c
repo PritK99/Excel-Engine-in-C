@@ -2,18 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+//Cell represents indivisual cell in csv file
+typedef struct {
+    char* val;
+}Cell ;
+
 //Table represents the structure of csv file
 typedef struct {
     int rows;
     int cols;
-    int** table;
+    Cell** table;
 }Table;
 
-//Cell represents indivisual cell in csv file
-typedef struct {
-    char* val;
-    int type;
-}Cell ;
 
 void parse(char* buffer, int m, Table t)
 {
@@ -34,16 +34,38 @@ void parse(char* buffer, int m, Table t)
     }
 
     //incrementing since a single '|' will represent two columns
-    t.rows = row++;
-    t.cols = col++;
-    printf("The dimension of csv file is %dx%d", row, col);
+    t.rows = ++row;
+    t.cols = ++col;
+    printf("The dimension of csv file is %dx%d\n", t.rows, t.cols);
 
-    int *p = NULL;
-    t.table = malloc(sizeof(p)*t.rows);
+    Cell *p = NULL;
+    t.table = (Cell**)malloc(sizeof(p)*t.rows);
 
     for (int i = 0 ; i < t.rows; i++)
     {
-        *t.table[i] = malloc(sizeof(Cell)*t.cols);
+        t.table[i] = (Cell*)malloc(sizeof(Cell)*t.cols);
+    }
+
+    int k = 0;
+    for (int i = 0 ; i < t.rows; i++)
+    {
+        for (int j = 0 ; j < t.cols; j++)
+        {
+            while(k < m && buffer[k] != '|' && buffer[k] != '\n')
+            {
+                if(buffer[k] == ' ')
+                {
+                    k++;
+                    continue;
+                }
+                // const char *tmpchar = (buffer+k);
+                printf("%c", buffer[k]);
+                // strcat((t.table)[i][j].val, tmpchar);
+                k++;
+            }
+            printf("\n");
+            k++;
+        }
     }
 }
 
