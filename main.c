@@ -107,9 +107,20 @@ void analyse(Table *t)
     }
 }
 
-int solve(Table *t, int i, int j)
+int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
 {
     char* temp = t->table[i][j].val;
+    if (visited[i][j] == 1)
+    {
+        fprintf(stderr,"ERROR: Circular dependecy at cell (%d, %d)\n", i, j);
+        exit(1);  
+    }
+    else
+    {
+        visited[i][j] = 1;
+    }
+    //keeping record of visited Cells to detect circular dependencies
+    
 
     if (strlen(temp) == 6)
     {
@@ -118,12 +129,55 @@ int solve(Table *t, int i, int j)
         Op2_i = temp[5] - '0';
         Op1_j = temp[1] - 'A';
         Op2_j = temp[4] - 'A';
-        Op1 = atoi(t->table[Op1_i][Op1_j].val);
-        Op2 = atoi(t->table[Op2_i][Op2_j].val);
+
+        if (t->table[Op1_i][Op1_j].type == NUMBER)
+        {
+            Op1 = atoi(t->table[Op1_i][Op1_j].val);
+        }
+        else 
+        {
+            visited[Op1_i][Op1_j] = 1;
+            Op1 = solve(t, Op1_i, Op1_j, visited);
+        }
+
+        if (t->table[Op2_i][Op2_j].type == NUMBER)
+        {
+            Op2 = atoi(t->table[Op2_i][Op2_j].val);
+        }
+        else 
+        {
+            Op2 = solve(t, Op2_i, Op2_j, visited);
+        }
+        
 
         if (temp[3] == '+')
         {
             result = Op1 + Op2 ;
+        }
+        else if (temp[3] == '*')
+        {
+            result = Op1 * Op2 ;
+        }
+        else if (temp[3] == '-')
+        {
+            result = Op1 - Op2 ;
+        }
+        else if (temp[3] == '/')
+        {
+            if (Op2 != 0)
+            {
+                result = Op1 + Op2 ;
+            }
+            else
+            {
+                fprintf(stderr, "ERROR: Cannot divide by Zero\n");
+                exit(1);                 
+            }
+        }
+        else
+        {
+            fprintf(stderr, "ERROR: Unknown operator detected\n");
+            exit(1);  
         }
 
         return result;
@@ -143,7 +197,16 @@ void solveWrapper(Table *t)
         {
             if(t->table[i][j].type == EXPRESSION)
             {
-                int x = solve(t, i, j); 
+                int visited[t->rows][t->cols];
+                for (int x = 0; x < t->rows; x++)
+                {
+                    for (int y = 0 ; y < t->cols; y++)
+                    {
+                        visited[x][y] = 0;
+                    }
+                }
+
+                int x = solve(t, i, j, visited); 
                 sprintf(t->table[i][j].val, "%d", x);
             }
         }
