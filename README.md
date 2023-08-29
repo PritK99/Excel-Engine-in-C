@@ -88,6 +88,10 @@ Usage: ```./a.out <path to input csv file```
 ```
 ## Features
 
+* To evaluate expressions (refer ```examples/test1```)
+* Works with Addition, Subtraction, Multiplication and Division Operators (refer ```examples/test2```)
+* Able to solve nested expressions and dependencies (refer ```examples/test2```)
+* Able to detect and report circular dependencies in expressions (refer ```examples/test3```)
 
 ## Contributors
 * [Prit Kanadiya](https://github.com/PritK99)
