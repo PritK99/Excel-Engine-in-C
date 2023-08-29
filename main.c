@@ -120,7 +120,6 @@ int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
         visited[i][j] = 1;
     }
     //keeping record of visited Cells to detect circular dependencies
-    
 
     if (strlen(temp) == 6)
     {
@@ -136,7 +135,6 @@ int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
         }
         else 
         {
-            visited[Op1_i][Op1_j] = 1;
             Op1 = solve(t, Op1_i, Op1_j, visited);
         }
 
@@ -166,7 +164,7 @@ int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
         {
             if (Op2 != 0)
             {
-                result = Op1 + Op2 ;
+                result = Op1 / Op2 ;
             }
             else
             {
@@ -208,6 +206,7 @@ void solveWrapper(Table *t)
 
                 int x = solve(t, i, j, visited); 
                 sprintf(t->table[i][j].val, "%d", x);
+                t->table[i][j].type = NUMBER;
             }
         }
     }   
