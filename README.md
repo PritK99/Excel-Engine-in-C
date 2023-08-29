@@ -30,17 +30,7 @@ A      | B       | C      | D
 =C1+B3 | =C1*D2  | 15     | 7
 ```
 
-### Result
-### Input
-
-```
-A      | B       | C      | D 
-11     | 2       | =C3-A1 | 6
-11     | 1       | 13     | =D1/B1
-=C1+B3 | =C1*D2  | 15     | 7
-```
-
-### Result
+### Output
 
 <img src = "assets/test2.jpeg" alt="Test 2 results available in assets folder">
 
@@ -54,7 +44,8 @@ For more results, refer ```examples```.
  ┣ 📂examples                          // Contains all examples
    ┣ 📂test1                            
    ┃ ┣ 📄input.csv                     // Input CSV file  
-   ┃ ┣ 📄README.md
+   ┃ ┣ 📄README.md                     // Results and Conclusions
+ ┣ 📄README.md                          
    
 
      
