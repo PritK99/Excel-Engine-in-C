@@ -15,7 +15,7 @@
   
 ## About
 
-Implementing excel engine, but in C.
+Naive implementation of an excel engine in C.
 
 ## Results
 
