@@ -7,6 +7,12 @@ typedef enum {
     NUMBER, POSITION, EXPRESSION
 }Type;
 
+//Type represents different types of cell
+typedef enum {
+    ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION
+}Operation;
+
+
 //Cell represents indivisual cell in csv file
 typedef struct {
     char* val;
@@ -101,9 +107,47 @@ void analyse(Table *t)
     }
 }
 
-void solve(Table *t)
+int solve(Table *t, int i, int j)
 {
+    char* temp = t->table[i][j].val;
 
+    if (strlen(temp) == 6)
+    {
+        int Op1, Op2, Op1_i, Op2_i, Op1_j, Op2_j, result ;
+        Op1_i = temp[2] - '0';
+        Op2_i = temp[5] - '0';
+        Op1_j = temp[1] - 'A';
+        Op2_j = temp[4] - 'A';
+        Op1 = atoi(t->table[Op1_i][Op1_j].val);
+        Op2 = atoi(t->table[Op2_i][Op2_j].val);
+
+        if (temp[3] == '+')
+        {
+            result = Op1 + Op2 ;
+        }
+
+        return result;
+    }
+    else
+    {
+        fprintf(stderr, "ERROR: expression can not be evaluated\n");
+        exit(1);    
+    }
+}
+
+void solveWrapper(Table *t)
+{
+    for (int i = 0 ; i < t->rows; i++)
+    {
+        for (int j = 0 ; j < t->cols; j++)
+        {
+            if(t->table[i][j].type == EXPRESSION)
+            {
+                int x = solve(t, i, j); 
+                sprintf(t->table[i][j].val, "%d", x);
+            }
+        }
+    }   
 }
 
 int main(int argc, char* argv[])
@@ -120,9 +164,9 @@ int main(int argc, char* argv[])
 
     if (f == NULL)
     {
-        fprintf(stderr, "ERROR: file not found\n");
-        exit(1);
+        fprintf(stderr, "ERROR: Cannot allocate memory\n");
         fclose(f);
+        exit(1);
     }
 
     //creating a temporary pointer to obtain size of file
@@ -136,8 +180,8 @@ int main(int argc, char* argv[])
     if (buffer == NULL)
     {
         fprintf(stderr, "ERROR: Cannot allocate memory\n");
-        exit(1);
         fclose(f);
+        exit(1);
     }
 
     //printing contents of buffer
@@ -153,7 +197,18 @@ int main(int argc, char* argv[])
     analyse(&t);
 
     //solve expression cells
-    solve(&t);
+    solveWrapper(&t);
+
+    //print output csv file
+    printf("The output file is: \n");
+    for (int i = 0 ; i < t.rows; i++)
+    {
+        for (int j = 0 ; j < t.cols; j++)
+        {
+            printf("%s ", t.table[i][j].val);
+        }
+        printf("\n");
+    }  
 
     return 0;
 }
