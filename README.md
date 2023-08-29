@@ -46,9 +46,6 @@ For more results, refer ```examples```.
    ┃ ┣ 📄input.csv                     // Input CSV file  
    ┃ ┣ 📄README.md                     // Results and Conclusions
  ┣ 📄README.md                          
-   
-
-     
 ``` 
 ## Getting Started
 
