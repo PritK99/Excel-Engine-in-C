@@ -12,5 +12,3 @@ A      | B       | C      | D
 ### Result
 
 <img src = "../../assets/test3.jpeg" alt="Test 3 results available in assets folder">
-
-### Conclusion
