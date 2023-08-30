@@ -7,20 +7,21 @@ Approach:
 5) Return the answer as string and store it in respective cell.
 6) Else report error. 
 
-Phase1: Assume no dependency
-Phase2: Add features for dependency
+Note:
+Solve() should return an integer in form of int and not string
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/*defining all structs and enum to be used in program*/
 //Type represents different types of cell
 typedef enum {
     NUMBER, POSITION, EXPRESSION
 }Type;
 
-//Type represents different types of cell
+//Operation represents different types of operations
 typedef enum {
     ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION
 }Operation;
@@ -40,6 +41,78 @@ typedef struct {
 }Table;
 
 
+/*function declarations*/
+void parse(char* buffer, int m, Table *t);
+void analyse(Table *t);
+void solveWrapper(Table *t);
+char* solve(Table *t, int i, int j, int visited[t->rows][t->cols]);
+char* simplify(char* s, Table* t, int visited[t->rows][t->cols]);
+
+/*driver function*/
+int main(int argc, char* argv[])
+{
+    if (argc < 2)
+    {
+        fprintf(stderr, "ERROR: input file is not provided\n");
+        exit(1);
+    }
+
+    char* file_path = argv[1];
+
+    FILE *f = fopen(file_path, "rb");
+
+    if (f == NULL)
+    {
+        fprintf(stderr, "ERROR: Cannot allocate memory\n");
+        fclose(f);
+        exit(1);
+    }
+
+    //creating a temporary pointer to obtain size of file
+    FILE* temp = f;
+    fseek(temp, 0, SEEK_END);
+    long m = ftell(temp);
+    fclose(temp);
+
+    //storing contents of file in buffer
+    char* buffer = malloc(sizeof(char)*m);
+    if (buffer == NULL)
+    {
+        fprintf(stderr, "ERROR: Cannot allocate memory\n");
+        fclose(f);
+        exit(1);
+    }
+
+    //printing contents of buffer
+    printf("Your input CSV file:\n");
+    fwrite(buffer, sizeof(char), m, stdout);
+    printf("\n");
+
+    //parse the csv file and store it in Table t
+    Table t;
+    parse(buffer, m, &t);
+
+    //assign each cell a type
+    analyse(&t);
+
+    // //solve expression cells
+    solveWrapper(&t);
+
+    //print output csv file
+    printf("The output file is: \n");
+    for (int i = 0 ; i < t.rows; i++)
+    {
+        for (int j = 0 ; j < t.cols; j++)
+        {
+            printf("%s ", t.table[i][j].val);
+        }
+        printf("\n");
+    }  
+
+    return 0;
+}
+
+/*function definitions*/
 void parse(char* buffer, int m, Table *t)
 {
     int row = 0;
@@ -120,146 +193,6 @@ void analyse(Table *t)
     }
 }
 
-char* simplify(char* s, Table* t)
-{
-    char* new = "";
-
-    //visited matrix to keep track of circular dependencies
-    int visited[t->rows][t->cols];
-    for (int x = 0; x < t->rows; x++)
-    {
-        for (int y = 0 ; y < t->cols; y++)
-        {
-            visited[x][y] = 0;
-        }
-    }
-    
-    //we start from i = 1 to ignore = symbol
-    for (int i = 1 ; i < strlen(s); i++)
-    {
-        if(s[i] >= 'A' && s[i] <= 'Z')
-        {
-            int Op, Op_i, Op_j, result ;
-            if (i+1 >= strlen(s))
-            {
-                fprintf(stderr,"ERROR: Cannot resolve expressions in CSV file");
-                exit(1);   
-            }
-            Op_i = s[i+1] - '0';
-            Op_j = s[i] - 'A';
-
-            if (t->table[Op_i][Op_j].type == NUMBER)
-            {
-                Op = atoi(t->table[Op_i][Op_j].val);
-            }
-            else 
-            {
-                //Phase 1 - Pending
-                // Op = solve(t, Op_i, Op_j, visited);
-            }
-            char* temp = (char*)malloc(sizeof(char)*10);
-            sprintf(temp, "%d", Op);
-
-            i++;
-            char* new_temp = malloc(strlen(new) + strlen(temp) + 1);
-            strcpy(new_temp, new);
-            strcat(new_temp, temp);
-            new = new_temp;
-            printf("%s\n", new);
-        }
-        else
-        {
-            char c = s[i];
-            char* new_temp = malloc(strlen(new) + 1 + 1);
-            strcpy(new_temp, new);
-            new_temp[strlen(new)] = c;
-            new_temp[strlen(new) + 1] = '\0';
-            new = new_temp;
-        }
-    }
-    return new;
-}
-
-int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
-{
-    char* temp = t->table[i][j].val;
-    if (visited[i][j] == 1)
-    {
-        fprintf(stderr,"ERROR: Circular dependecy at cell (%d, %d)\n", i, j);
-        exit(1);  
-    }
-    else
-    {
-        visited[i][j] = 1;
-    }
-    //keeping record of visited Cells to detect circular dependencies
-
-    if (strlen(temp) == 6)
-    {
-        int Op1, Op2, Op1_i, Op2_i, Op1_j, Op2_j, result ;
-        Op1_i = temp[2] - '0';
-        Op2_i = temp[5] - '0';
-        Op1_j = temp[1] - 'A';
-        Op2_j = temp[4] - 'A';
-
-        if (t->table[Op1_i][Op1_j].type == NUMBER)
-        {
-            Op1 = atoi(t->table[Op1_i][Op1_j].val);
-        }
-        else 
-        {
-            Op1 = solve(t, Op1_i, Op1_j, visited);
-        }
-
-        if (t->table[Op2_i][Op2_j].type == NUMBER)
-        {
-            Op2 = atoi(t->table[Op2_i][Op2_j].val);
-        }
-        else 
-        {
-            Op2 = solve(t, Op2_i, Op2_j, visited);
-        }
-        
-
-        if (temp[3] == '+')
-        {
-            result = Op1 + Op2 ;
-        }
-        else if (temp[3] == '*')
-        {
-            result = Op1 * Op2 ;
-        }
-        else if (temp[3] == '-')
-        {
-            result = Op1 - Op2 ;
-        }
-        else if (temp[3] == '/')
-        {
-            if (Op2 != 0)
-            {
-                result = Op1 / Op2 ;
-            }
-            else
-            {
-                fprintf(stderr, "ERROR: Cannot divide by Zero\n");
-                exit(1);                 
-            }
-        }
-        else
-        {
-            fprintf(stderr, "ERROR: Unknown operator detected\n");
-            exit(1);  
-        }
-
-        return result;
-    }
-    else
-    {
-        fprintf(stderr, "ERROR: expression can not be evaluated\n");
-        exit(1);    
-    }
-}
-
 void solveWrapper(Table *t)
 {
     for (int i = 0 ; i < t->rows; i++)
@@ -277,76 +210,77 @@ void solveWrapper(Table *t)
                     }
                 }
 
-                int x = solve(t, i, j, visited); 
-                sprintf(t->table[i][j].val, "%d", x);
+                // int x = solve(t, i, j, visited); 
+                // sprintf(t->table[i][j].val, "%d", x);
+                t->table[i][j].val = solve(t, i, j, visited);
                 t->table[i][j].type = NUMBER;
             }
         }
     }   
 }
 
-int main(int argc, char* argv[])
+char* solve(Table *t, int i, int j, int visited[t->rows][t->cols])
 {
-    if (argc < 2)
+    char* temp = t->table[i][j].val;
+    if (visited[i][j] == 1)
     {
-        fprintf(stderr, "ERROR: input file is not provided\n");
-        exit(1);
+        fprintf(stderr,"ERROR: Circular dependecy at cell (%d, %d)\n", i, j);
+        exit(1);  
+    }
+    else
+    {
+        visited[i][j] = 1;
     }
 
-    char* file_path = argv[1];
+    char* new = simplify(temp, t, visited);
+    return new;
+}
 
-    FILE *f = fopen(file_path, "rb");
-
-    if (f == NULL)
+char* simplify(char* s, Table* t, int visited[t->rows][t->cols])
+{
+    char* new = "";
+    
+    //we start from i = 1 to ignore = symbol
+    for (int i = 1 ; i < strlen(s); i++)
     {
-        fprintf(stderr, "ERROR: Cannot allocate memory\n");
-        fclose(f);
-        exit(1);
-    }
-
-    //creating a temporary pointer to obtain size of file
-    FILE* temp = f;
-    fseek(temp, 0, SEEK_END);
-    long m = ftell(temp);
-    fclose(temp);
-
-    //storing contents of file in buffer
-    char* buffer = malloc(sizeof(char)*m);
-    if (buffer == NULL)
-    {
-        fprintf(stderr, "ERROR: Cannot allocate memory\n");
-        fclose(f);
-        exit(1);
-    }
-
-    //printing contents of buffer
-    printf("Your input CSV file:\n");
-    fwrite(buffer, sizeof(char), m, stdout);
-    printf("\n");
-
-    //parse the csv file and store it in Table t
-    Table t;
-    parse(buffer, m, &t);
-
-    //assign each cell a type
-    analyse(&t);
-
-    // //solve expression cells
-    // solveWrapper(&t);
-
-    //print output csv file
-    printf("The output file is: \n");
-    for (int i = 0 ; i < t.rows; i++)
-    {
-        for (int j = 0 ; j < t.cols; j++)
+        if(s[i] >= 'A' && s[i] <= 'Z')
         {
-            printf("%s ", t.table[i][j].val);
+            int Op, Op_i, Op_j, result ;
+            if (i+1 >= strlen(s))
+            {
+                fprintf(stderr,"ERROR: Cannot resolve expressions in CSV file");
+                exit(1);   
+            }
+            Op_i = s[i+1] - '0';
+            Op_j = s[i] - 'A';
+
+            char* temp = (char*)malloc(sizeof(char)*10);
+            if (t->table[Op_i][Op_j].type == NUMBER)
+            {
+                Op = atoi(t->table[Op_i][Op_j].val);
+                sprintf(temp, "%d", Op);
+            }
+            else 
+            {
+                temp = solve(t, Op_i, Op_j, visited);
+            }
+
+            i++;
+            char* new_temp = malloc(strlen(new) + strlen(temp) + 1);
+            strcpy(new_temp, new);
+            strcat(new_temp, temp);
+            new = new_temp;
+            free(temp);
         }
-        printf("\n");
-    }  
-
-    char* new = simplify("=A2+A1", &t);
-    printf("\n%s", new);
-
-    return 0;
+        else
+        {
+            char c = s[i];
+            char* new_temp = malloc(strlen(new) + 1 + 1);
+            strcpy(new_temp, new);
+            new_temp[strlen(new)] = c;
+            new_temp[strlen(new) + 1] = '\0';
+            new = new_temp;
+        }
+    }
+    return new;
 }
