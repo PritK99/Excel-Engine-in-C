@@ -15,17 +15,13 @@ Solve() should return an integer in form of int and not string
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_SIZE 10000      //maximum size of an expression
+
 /*defining all structs and enum to be used in program*/
 //Type represents different types of cell
 typedef enum {
     NUMBER, POSITION, EXPRESSION
 }Type;
-
-//Operation represents different types of operations
-typedef enum {
-    ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION
-}Operation;
-
 
 //Cell represents indivisual cell in csv file
 typedef struct {
@@ -40,6 +36,11 @@ typedef struct {
     Cell** table;
 }Table;
 
+//Stack represents stack data structure
+typedef struct{
+    int top;
+    int arr[MAX_SIZE];
+}Stack ;
 
 /*function declarations*/
 void parse(char* buffer, int m, Table *t);
@@ -47,6 +48,8 @@ void analyse(Table *t);
 void solveWrapper(Table *t);
 char* solve(Table *t, int i, int j, int visited[t->rows][t->cols]);
 char* simplify(char* s, Table* t, int visited[t->rows][t->cols]);
+char* infixToPostfix(char *s);
+int precedence(char c);
 
 /*driver function*/
 int main(int argc, char* argv[])
@@ -107,9 +110,7 @@ int main(int argc, char* argv[])
             printf("%s ", t.table[i][j].val);
         }
         printf("\n");
-    }  
-
-    return 0;
+    }   
 }
 
 /*function definitions*/
@@ -232,8 +233,10 @@ char* solve(Table *t, int i, int j, int visited[t->rows][t->cols])
         visited[i][j] = 1;
     }
 
-    char* new = simplify(temp, t, visited);
-    return new;
+    char* infix = simplify(temp, t, visited);
+    char* postfix = infixToPostfix(infix);
+
+    return postfix;
 }
 
 char* simplify(char* s, Table* t, int visited[t->rows][t->cols])
@@ -282,5 +285,93 @@ char* simplify(char* s, Table* t, int visited[t->rows][t->cols])
             new = new_temp;
         }
     }
+    return new;
+}
+
+int precedence(char c)
+{
+    if (c == '+' || c == '-')
+    {
+        return 1;
+    }
+    else if (c == '*' || c == '/')
+    {
+        return 2;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+char* infixToPostfix(char *s)
+{
+    //using | as a delimeter for seperating multi-digit numbers
+    int n = strlen(s);
+    char* new = (char *)malloc(sizeof(char)*((2*n)+1));
+    
+    int j = 0;
+
+    Stack st;
+    st.top = -1;
+    int flag = 0;
+    for (int i = 0 ; i < n; i++)
+    {
+        if (s[i]>='0' && s[i] <= '9')
+        {
+            if (j > 0 && new[j-1]>='0' && new[j-1] <= '9' && flag == 0)
+            {
+                new[j] = '|';
+                j++;
+            }
+            new[j] = s[i];
+            j++;
+            flag = 1;
+        }
+        else if (st.top == -1)
+        {
+            st.top++; 
+            st.arr[st.top] = s[i];
+            flag = 0;
+        }
+        else if (s[i] == '(')
+        {
+            st.top++; 
+            st.arr[st.top] = s[i]; 
+            flag = 0;          
+        }
+        else if (s[i] == ')')
+        {
+            while(st.top > -1 && st.arr[st.top] != '(')
+            {
+                new[j] = st.arr[st.top];
+                st.top--;
+                j++;
+            }
+            st.top--;
+            flag = 0;
+        }
+        else
+        {
+            while (st.top > -1 && precedence(st.arr[st.top]) >= precedence(s[i]))
+            {
+                new[j] = st.arr[st.top];
+                st.top--;
+                j++;
+            }
+            st.top++;
+            st.arr[st.top]=s[i];
+            flag = 0;
+        }
+    }
+
+    while (st.top > -1)
+    {
+        new[j] = st.arr[st.top];
+        st.top--;
+        j++;        
+    }
+    new[j] = '\0';
+
     return new;
 }
