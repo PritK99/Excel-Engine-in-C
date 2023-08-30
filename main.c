@@ -46,10 +46,11 @@ typedef struct{
 void parse(char* buffer, int m, Table *t);
 void analyse(Table *t);
 void solveWrapper(Table *t);
-char* solve(Table *t, int i, int j, int visited[t->rows][t->cols]);
+int solve(Table *t, int i, int j, int visited[t->rows][t->cols]);
 char* simplify(char* s, Table* t, int visited[t->rows][t->cols]);
-char* infixToPostfix(char *s);
+char* infixToPostfix(char *infix);
 int precedence(char c);
+int evaluate(char *postfix);
 
 /*driver function*/
 int main(int argc, char* argv[])
@@ -211,16 +212,15 @@ void solveWrapper(Table *t)
                     }
                 }
 
-                // int x = solve(t, i, j, visited); 
-                // sprintf(t->table[i][j].val, "%d", x);
-                t->table[i][j].val = solve(t, i, j, visited);
+                int x = solve(t, i, j, visited); 
+                sprintf(t->table[i][j].val, "%d", x);
                 t->table[i][j].type = NUMBER;
             }
         }
     }   
 }
 
-char* solve(Table *t, int i, int j, int visited[t->rows][t->cols])
+int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
 {
     char* temp = t->table[i][j].val;
     if (visited[i][j] == 1)
@@ -235,8 +235,9 @@ char* solve(Table *t, int i, int j, int visited[t->rows][t->cols])
 
     char* infix = simplify(temp, t, visited);
     char* postfix = infixToPostfix(infix);
+    int result = evaluate(postfix);
 
-    return postfix;
+    return result;
 }
 
 char* simplify(char* s, Table* t, int visited[t->rows][t->cols])
@@ -248,7 +249,7 @@ char* simplify(char* s, Table* t, int visited[t->rows][t->cols])
     {
         if(s[i] >= 'A' && s[i] <= 'Z')
         {
-            int Op, Op_i, Op_j, result ;
+            int Op, Op_i, Op_j;
             if (i+1 >= strlen(s))
             {
                 fprintf(stderr,"ERROR: Cannot resolve expressions in CSV file");
@@ -261,14 +262,14 @@ char* simplify(char* s, Table* t, int visited[t->rows][t->cols])
             if (t->table[Op_i][Op_j].type == NUMBER)
             {
                 Op = atoi(t->table[Op_i][Op_j].val);
-                sprintf(temp, "%d", Op);
             }
             else 
             {
-                temp = solve(t, Op_i, Op_j, visited);
+                Op = solve(t, Op_i, Op_j, visited);
             }
 
             i++;
+            sprintf(temp, "%d", Op);
             char* new_temp = malloc(strlen(new) + strlen(temp) + 1);
             strcpy(new_temp, new);
             strcat(new_temp, temp);
@@ -374,4 +375,62 @@ char* infixToPostfix(char *s)
     new[j] = '\0';
 
     return new;
+}
+
+int evaluate(char *s)
+{
+    Stack operand;
+    operand.top = -1;
+
+    int n = strlen(s);
+    for (int i = 0 ; i < n ; i++)
+    {
+        if (s[i] >= '0' && s[i] <= '9')
+        {
+            char* temp = (char*)malloc(sizeof(char)*n);
+            int k = 0;
+            while (s[i] >= '0' && s[i] <= '9')
+            {
+                temp[k] = s[i];
+                k++;
+                i++;
+            }
+            i--;
+            temp[k]='\0';
+            int num = atoi(temp);
+            operand.top++;
+            operand.arr[operand.top] = num;
+        }
+        else if (s[i] == '|')
+        {
+            continue;
+        }
+        else
+        {
+            int Op2 = operand.arr[operand.top];
+            operand.top--;
+            int Op1 = operand.arr[operand.top];
+            operand.top--;
+            int result;
+            if (s[i] == '+')
+            {
+                result = Op1+Op2;
+            }
+            else if (s[i] == '-')
+            {
+                result = Op1-Op2;
+            }
+            else if (s[i] == '*')
+            {
+                result = Op1*Op2;
+            }
+            else
+            {
+                result = Op1/Op2;
+            }
+            operand.top++;
+            operand.arr[operand.top] = result;
+        }
+    }
+    return operand.arr[operand.top];
 }
