@@ -4,7 +4,7 @@
 
 //Type represents different types of cell
 typedef enum {
-    NUMBER, POSITION, EXPRESSION
+    NUMBER, LABEL, EXPRESSION
 }Type;
 
 //Type represents different types of cell
@@ -101,7 +101,7 @@ void analyse(Table *t)
             }
             else
             {
-                t->table[i][j].type = POSITION;
+                t->table[i][j].type = LABEL;
             }
         }
     }
@@ -121,8 +121,28 @@ int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
     }
     //keeping record of visited Cells to detect circular dependencies
 
-    if (strlen(temp) == 6)
+    if (temp[0]=='=')
     {
+        for (int i = 1; i < strlen(temp); i++)
+        {
+            //evaluate nested expressions if found
+            if (temp[i] >= 'A' && temp[i] <= 'Z')
+            {
+                int Op1, Op1_i, Op1_j, result ;
+                Op1_i = temp[i+1] - '0';
+                Op1_j = temp[i] - 'A';
+                i++;
+                if (t->table[Op1_i][Op1_j].type == NUMBER)
+                {
+                    Op1 = atoi(t->table[Op1_i][Op1_j].val);
+                }
+                else 
+                {
+                    Op1 = solve(t, Op1_i, Op1_j, visited);
+                }
+            }
+        }
+
         int Op1, Op2, Op1_i, Op2_i, Op1_j, Op2_j, result ;
         Op1_i = temp[2] - '0';
         Op2_i = temp[5] - '0';
