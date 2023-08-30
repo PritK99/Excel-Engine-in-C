@@ -1,3 +1,13 @@
+/*
+Approach: 
+1) Accept all expressions as string. 
+2) Resolve all the dependencies in the expression.
+3) Convert these expressions from infix to postfix.
+4) Evaluate the postfix expression considering that the number may be multi-digit.
+5) Return the answer as string and store it in respective cell.
+6) Else report error. 
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
