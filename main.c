@@ -6,6 +6,9 @@ Approach:
 4) Evaluate the postfix expression considering that the number may be multi-digit.
 5) Return the answer as string and store it in respective cell.
 6) Else report error. 
+
+Phase1: Assume no dependency
+Phase2: Add features for dependency
 */
 
 #include <stdio.h>
@@ -115,6 +118,66 @@ void analyse(Table *t)
             }
         }
     }
+}
+
+char* simplify(char* s, Table* t)
+{
+    char* new = "";
+
+    //visited matrix to keep track of circular dependencies
+    int visited[t->rows][t->cols];
+    for (int x = 0; x < t->rows; x++)
+    {
+        for (int y = 0 ; y < t->cols; y++)
+        {
+            visited[x][y] = 0;
+        }
+    }
+    
+    //we start from i = 1 to ignore = symbol
+    for (int i = 1 ; i < strlen(s); i++)
+    {
+        if(s[i] >= 'A' && s[i] <= 'Z')
+        {
+            int Op, Op_i, Op_j, result ;
+            if (i+1 >= strlen(s))
+            {
+                fprintf(stderr,"ERROR: Cannot resolve expressions in CSV file");
+                exit(1);   
+            }
+            Op_i = s[i+1] - '0';
+            Op_j = s[i] - 'A';
+
+            if (t->table[Op_i][Op_j].type == NUMBER)
+            {
+                Op = atoi(t->table[Op_i][Op_j].val);
+            }
+            else 
+            {
+                //Phase 1 - Pending
+                // Op = solve(t, Op_i, Op_j, visited);
+            }
+            char* temp = (char*)malloc(sizeof(char)*10);
+            sprintf(temp, "%d", Op);
+
+            i++;
+            char* new_temp = malloc(strlen(new) + strlen(temp) + 1);
+            strcpy(new_temp, new);
+            strcat(new_temp, temp);
+            new = new_temp;
+            printf("%s\n", new);
+        }
+        else
+        {
+            char c = s[i];
+            char* new_temp = malloc(strlen(new) + 1 + 1);
+            strcpy(new_temp, new);
+            new_temp[strlen(new)] = c;
+            new_temp[strlen(new) + 1] = '\0';
+            new = new_temp;
+        }
+    }
+    return new;
 }
 
 int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
@@ -268,8 +331,8 @@ int main(int argc, char* argv[])
     //assign each cell a type
     analyse(&t);
 
-    //solve expression cells
-    solveWrapper(&t);
+    // //solve expression cells
+    // solveWrapper(&t);
 
     //print output csv file
     printf("The output file is: \n");
@@ -281,6 +344,9 @@ int main(int argc, char* argv[])
         }
         printf("\n");
     }  
+
+    char* new = simplify("=A2+A1", &t);
+    printf("\n%s", new);
 
     return 0;
 }
