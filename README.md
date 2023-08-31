@@ -94,10 +94,8 @@ Usage: ```./a.out <path to input csv file```
 * [Prit Kanadiya](https://github.com/PritK99)
 
 ## Acknowledgements and References
+* <a href="https://devdocs.io/c-strings/">Click here</a> for documentation of various string related functions in C.
 * https://github.com/tsoding/minicel
  
 ## License
 [MIT License](https://opensource.org/licenses/MIT)
-
-
-

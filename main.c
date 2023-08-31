@@ -1,17 +1,27 @@
+/*
+Approach: 
+1) Accept all expressions as string. 
+2) Resolve all the dependencies in the expression.
+3) Convert these expressions from infix to postfix.
+4) Evaluate the postfix expression considering that the number may be multi-digit.
+5) Return the answer as string and store it in respective cell.
+6) Else report error. 
+
+Note:
+Solve() should return an integer in form of int and not string
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_SIZE 10000      //maximum size of an expression
+
+/*defining all structs and enum to be used in program*/
 //Type represents different types of cell
 typedef enum {
     NUMBER, POSITION, EXPRESSION
 }Type;
-
-//Type represents different types of cell
-typedef enum {
-    ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION
-}Operation;
-
 
 //Cell represents indivisual cell in csv file
 typedef struct {
@@ -26,7 +36,85 @@ typedef struct {
     Cell** table;
 }Table;
 
+//Stack represents stack data structure
+typedef struct{
+    int top;
+    int arr[MAX_SIZE];
+}Stack ;
 
+/*function declarations*/
+void parse(char* buffer, int m, Table *t);
+void analyse(Table *t);
+void solveWrapper(Table *t);
+int solve(Table *t, int i, int j, int visited[t->rows][t->cols]);
+char* simplify(char* s, Table* t, int visited[t->rows][t->cols]);
+char* infixToPostfix(char *infix);
+int precedence(char c);
+int evaluate(char *postfix);
+
+/*driver function*/
+int main(int argc, char* argv[])
+{
+    if (argc < 2)
+    {
+        fprintf(stderr, "ERROR: input file is not provided\n");
+        exit(1);
+    }
+
+    char* file_path = argv[1];
+
+    FILE *f = fopen(file_path, "rb");
+
+    if (f == NULL)
+    {
+        fprintf(stderr, "ERROR: Cannot allocate memory\n");
+        fclose(f);
+        exit(1);
+    }
+
+    //creating a temporary pointer to obtain size of file
+    FILE* temp = f;
+    fseek(temp, 0, SEEK_END);
+    long m = ftell(temp);
+    fclose(temp);
+
+    //storing contents of file in buffer
+    char* buffer = malloc(sizeof(char)*m);
+    if (buffer == NULL)
+    {
+        fprintf(stderr, "ERROR: Cannot allocate memory\n");
+        fclose(f);
+        exit(1);
+    }
+
+    //printing contents of buffer
+    printf("Your input CSV file:\n");
+    fwrite(buffer, sizeof(char), m, stdout);
+    printf("\n");
+
+    //parse the csv file and store it in Table t
+    Table t;
+    parse(buffer, m, &t);
+
+    //assign each cell a type
+    analyse(&t);
+
+    // //solve expression cells
+    solveWrapper(&t);
+
+    //print output csv file
+    printf("The output file is: \n");
+    for (int i = 0 ; i < t.rows; i++)
+    {
+        for (int j = 0 ; j < t.cols; j++)
+        {
+            printf("%s ", t.table[i][j].val);
+        }
+        printf("\n");
+    }   
+}
+
+/*function definitions*/
 void parse(char* buffer, int m, Table *t)
 {
     int row = 0;
@@ -107,86 +195,6 @@ void analyse(Table *t)
     }
 }
 
-int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
-{
-    char* temp = t->table[i][j].val;
-    if (visited[i][j] == 1)
-    {
-        fprintf(stderr,"ERROR: Circular dependecy at cell (%d, %d)\n", i, j);
-        exit(1);  
-    }
-    else
-    {
-        visited[i][j] = 1;
-    }
-    //keeping record of visited Cells to detect circular dependencies
-
-    if (strlen(temp) == 6)
-    {
-        int Op1, Op2, Op1_i, Op2_i, Op1_j, Op2_j, result ;
-        Op1_i = temp[2] - '0';
-        Op2_i = temp[5] - '0';
-        Op1_j = temp[1] - 'A';
-        Op2_j = temp[4] - 'A';
-
-        if (t->table[Op1_i][Op1_j].type == NUMBER)
-        {
-            Op1 = atoi(t->table[Op1_i][Op1_j].val);
-        }
-        else 
-        {
-            Op1 = solve(t, Op1_i, Op1_j, visited);
-        }
-
-        if (t->table[Op2_i][Op2_j].type == NUMBER)
-        {
-            Op2 = atoi(t->table[Op2_i][Op2_j].val);
-        }
-        else 
-        {
-            Op2 = solve(t, Op2_i, Op2_j, visited);
-        }
-        
-
-        if (temp[3] == '+')
-        {
-            result = Op1 + Op2 ;
-        }
-        else if (temp[3] == '*')
-        {
-            result = Op1 * Op2 ;
-        }
-        else if (temp[3] == '-')
-        {
-            result = Op1 - Op2 ;
-        }
-        else if (temp[3] == '/')
-        {
-            if (Op2 != 0)
-            {
-                result = Op1 / Op2 ;
-            }
-            else
-            {
-                fprintf(stderr, "ERROR: Cannot divide by Zero\n");
-                exit(1);                 
-            }
-        }
-        else
-        {
-            fprintf(stderr, "ERROR: Unknown operator detected\n");
-            exit(1);  
-        }
-
-        return result;
-    }
-    else
-    {
-        fprintf(stderr, "ERROR: expression can not be evaluated\n");
-        exit(1);    
-    }
-}
-
 void solveWrapper(Table *t)
 {
     for (int i = 0 ; i < t->rows; i++)
@@ -212,65 +220,217 @@ void solveWrapper(Table *t)
     }   
 }
 
-int main(int argc, char* argv[])
+int solve(Table *t, int i, int j, int visited[t->rows][t->cols])
 {
-    if (argc < 2)
+    char* temp = t->table[i][j].val;
+    if (visited[i][j] == 1)
     {
-        fprintf(stderr, "ERROR: input file is not provided\n");
-        exit(1);
+        fprintf(stderr,"ERROR: Circular dependecy at cell (%d, %d)\n", i, j);
+        exit(1);  
+    }
+    else
+    {
+        visited[i][j] = 1;
     }
 
-    char* file_path = argv[1];
+    char* infix = simplify(temp, t, visited);
+    char* postfix = infixToPostfix(infix);
+    int result = evaluate(postfix);
 
-    FILE *f = fopen(file_path, "rb");
+    return result;
+}
 
-    if (f == NULL)
+char* simplify(char* s, Table* t, int visited[t->rows][t->cols])
+{
+    char* new = "";
+    
+    //we start from i = 1 to ignore = symbol
+    for (int i = 1 ; i < strlen(s); i++)
     {
-        fprintf(stderr, "ERROR: Cannot allocate memory\n");
-        fclose(f);
-        exit(1);
-    }
-
-    //creating a temporary pointer to obtain size of file
-    FILE* temp = f;
-    fseek(temp, 0, SEEK_END);
-    long m = ftell(temp);
-    fclose(temp);
-
-    //storing contents of file in buffer
-    char* buffer = malloc(sizeof(char)*m);
-    if (buffer == NULL)
-    {
-        fprintf(stderr, "ERROR: Cannot allocate memory\n");
-        fclose(f);
-        exit(1);
-    }
-
-    //printing contents of buffer
-    printf("Your input CSV file:\n");
-    fwrite(buffer, sizeof(char), m, stdout);
-    printf("\n");
-
-    //parse the csv file and store it in Table t
-    Table t;
-    parse(buffer, m, &t);
-
-    //assign each cell a type
-    analyse(&t);
-
-    //solve expression cells
-    solveWrapper(&t);
-
-    //print output csv file
-    printf("The output file is: \n");
-    for (int i = 0 ; i < t.rows; i++)
-    {
-        for (int j = 0 ; j < t.cols; j++)
+        if(s[i] >= 'A' && s[i] <= 'Z')
         {
-            printf("%s ", t.table[i][j].val);
-        }
-        printf("\n");
-    }  
+            int Op, Op_i, Op_j;
+            if (i+1 >= strlen(s))
+            {
+                fprintf(stderr,"ERROR: Cannot resolve expressions in CSV file");
+                exit(1);   
+            }
+            Op_i = s[i+1] - '0';
+            Op_j = s[i] - 'A';
 
-    return 0;
+            char* temp = (char*)malloc(sizeof(char)*10);
+            if (t->table[Op_i][Op_j].type == NUMBER)
+            {
+                Op = atoi(t->table[Op_i][Op_j].val);
+            }
+            else 
+            {
+                Op = solve(t, Op_i, Op_j, visited);
+            }
+
+            i++;
+            sprintf(temp, "%d", Op);
+            char* new_temp = malloc(strlen(new) + strlen(temp) + 1);
+            strcpy(new_temp, new);
+            strcat(new_temp, temp);
+            new = new_temp;
+            free(temp);
+        }
+        else
+        {
+            char c = s[i];
+            char* new_temp = malloc(strlen(new) + 1 + 1);
+            strcpy(new_temp, new);
+            new_temp[strlen(new)] = c;
+            new_temp[strlen(new) + 1] = '\0';
+            new = new_temp;
+        }
+    }
+    return new;
+}
+
+int precedence(char c)
+{
+    if (c == '+' || c == '-')
+    {
+        return 1;
+    }
+    else if (c == '*' || c == '/')
+    {
+        return 2;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+char* infixToPostfix(char *s)
+{
+    //using | as a delimeter for seperating multi-digit numbers
+    int n = strlen(s);
+    char* new = (char *)malloc(sizeof(char)*((2*n)+1));
+    
+    int j = 0;
+
+    Stack st;
+    st.top = -1;
+    int flag = 0;
+    for (int i = 0 ; i < n; i++)
+    {
+        if (s[i]>='0' && s[i] <= '9')
+        {
+            if (j > 0 && new[j-1]>='0' && new[j-1] <= '9' && flag == 0)
+            {
+                new[j] = '|';
+                j++;
+            }
+            new[j] = s[i];
+            j++;
+            flag = 1;
+        }
+        else if (st.top == -1)
+        {
+            st.top++; 
+            st.arr[st.top] = s[i];
+            flag = 0;
+        }
+        else if (s[i] == '(')
+        {
+            st.top++; 
+            st.arr[st.top] = s[i]; 
+            flag = 0;          
+        }
+        else if (s[i] == ')')
+        {
+            while(st.top > -1 && st.arr[st.top] != '(')
+            {
+                new[j] = st.arr[st.top];
+                st.top--;
+                j++;
+            }
+            st.top--;
+            flag = 0;
+        }
+        else
+        {
+            while (st.top > -1 && precedence(st.arr[st.top]) >= precedence(s[i]))
+            {
+                new[j] = st.arr[st.top];
+                st.top--;
+                j++;
+            }
+            st.top++;
+            st.arr[st.top]=s[i];
+            flag = 0;
+        }
+    }
+
+    while (st.top > -1)
+    {
+        new[j] = st.arr[st.top];
+        st.top--;
+        j++;        
+    }
+    new[j] = '\0';
+
+    return new;
+}
+
+int evaluate(char *s)
+{
+    Stack operand;
+    operand.top = -1;
+
+    int n = strlen(s);
+    for (int i = 0 ; i < n ; i++)
+    {
+        if (s[i] >= '0' && s[i] <= '9')
+        {
+            char* temp = (char*)malloc(sizeof(char)*n);
+            int k = 0;
+            while (s[i] >= '0' && s[i] <= '9')
+            {
+                temp[k] = s[i];
+                k++;
+                i++;
+            }
+            i--;
+            temp[k]='\0';
+            int num = atoi(temp);
+            operand.top++;
+            operand.arr[operand.top] = num;
+        }
+        else if (s[i] == '|')
+        {
+            continue;
+        }
+        else
+        {
+            int Op2 = operand.arr[operand.top];
+            operand.top--;
+            int Op1 = operand.arr[operand.top];
+            operand.top--;
+            int result;
+            if (s[i] == '+')
+            {
+                result = Op1+Op2;
+            }
+            else if (s[i] == '-')
+            {
+                result = Op1-Op2;
+            }
+            else if (s[i] == '*')
+            {
+                result = Op1*Op2;
+            }
+            else
+            {
+                result = Op1/Op2;
+            }
+            operand.top++;
+            operand.arr[operand.top] = result;
+        }
+    }
+    return operand.arr[operand.top];
 }
