@@ -9,6 +9,7 @@
   - [About The Project](#about-the-project)
   - [Results](#results)
   - [File Structure](#file-structure)
+  - [Project Workflow](#project-workflow)
   - [Getting started](#Getting-Started)
   - [Features](#features)
   - [Contributors](#contributors)
@@ -45,8 +46,16 @@ For more results, refer ```examples```.
    ┣ 📂test1                            
    ┃ ┣ 📄input.csv                     // Input CSV file  
    ┃ ┣ 📄README.md                     // Results and Conclusions
+   ┣ 📂test2 
+   ┣ 📂test3 
+   ┣ 📂test4 
  ┣ 📄README.md                          
 ``` 
+
+## Project Workflow
+
+<img src = "assets/workflow.jpeg" alt = "Project Workflow can be found in assets">
+
 ## Getting Started
 
 ### Prerequisites
@@ -85,8 +94,8 @@ Usage: ```./a.out <path to input csv file```
 ```
 ## Features
 
-* To evaluate expressions (refer ```examples/test1```)
 * Works with Addition, Subtraction, Multiplication and Division Operators (refer ```examples/test2```)
+* To evaluate complex expressions consisting of several operands and operators (refer ```examples/test4```)
 * Able to solve nested expressions and dependencies (refer ```examples/test2```)
 * Able to detect and report circular dependencies in expressions (refer ```examples/test3```)
 
