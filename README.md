@@ -25,15 +25,15 @@ Naive implementation of an excel engine in C.
 ### Input
 
 ```
-A      | B       | C      | D 
-11     | 2       | =C3-A1 | 6
-11     | 1       | 13     | =D1/B1
-=C1+B3 | =C1*D2  | 15     | 7
+A                | B      | C   | D 
+9                | 2      | =C3 | 6
+11               | 3      | 13  | =D1/B1
+=((A1/B2)*A2)+B3 | =C1*D2 | 15  | 7
 ```
 
 ### Output
 
-<img src = "assets/test2.jpeg" alt="Test 2 results available in assets folder">
+<img src = "assets/test4.jpeg" alt="Test 2 results available in assets folder">
 
 For more results, refer ```examples```.
 
