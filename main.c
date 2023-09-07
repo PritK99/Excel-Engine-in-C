@@ -1,3 +1,6 @@
+/*
+The bugs are in memory leaks done during parsing and other operations on string
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
